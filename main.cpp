@@ -11,12 +11,20 @@ using namespace std;
 
 struct Osoba
 {
-    int id;
+    int idOsoby;
+    int idUzytkownika;
     string imie;
     string nazwisko;
     string telefon;
     string email;
     string adres;
+};
+
+struct Uzytkownik
+{
+    int idUzytkownika;
+    string nazwa;
+    string haslo;
 };
 
 //funkcja szyfrujaca i deszfrujaca haslo administratora przed zapisaniem do pliku
@@ -32,6 +40,26 @@ string szyfrujHaslo(string hasloDoZaszyfrowania)
     return hasloZaszyfrowane;
 }
 
+//funkcja zapisujaca dane uzytkownikow do pliku
+bool zapiszDaneUzytkownikow(vector<Uzytkownik> uzytkownicy)
+{
+    fstream plikDoZapisu;
+    plikDoZapisu.open("uzytkownicy.txt",ios::out);
+
+    vector<Uzytkownik>::iterator uzytkownikDoZapisu;
+    vector<Uzytkownik>::iterator koniecUzytkownikow = uzytkownicy.end() ;
+    for (uzytkownikDoZapisu=uzytkownicy.begin(); uzytkownikDoZapisu!=koniecUzytkownikow ; uzytkownikDoZapisu++ )
+    {
+
+        plikDoZapisu<<(*uzytkownikDoZapisu).idUzytkownika<<"|";
+        plikDoZapisu<<(*uzytkownikDoZapisu).nazwa<<"|";
+        plikDoZapisu<<szyfrujHaslo((*uzytkownikDoZapisu).haslo)<<"|"<<endl;
+
+
+    }
+    plikDoZapisu.close();
+    return true;
+}
 
 //funkcja zapisujaca dane z ksiazki adresowej do pliku
 bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin)
@@ -45,7 +73,7 @@ bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin)
     for (osobaDoZapisu=ksiazkaAdresowa.begin(); osobaDoZapisu!=koniecKsiazki; osobaDoZapisu++ )
     {
 
-        plikDoZapisu<<(*osobaDoZapisu).id<<"|";
+        plikDoZapisu<<(*osobaDoZapisu).idOsoby<<"|";
         plikDoZapisu<<(*osobaDoZapisu).imie<<"|";
         plikDoZapisu<<(*osobaDoZapisu).nazwisko<<"|";
         plikDoZapisu<<(*osobaDoZapisu).telefon<<"|";
@@ -58,20 +86,18 @@ bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin)
     return true;
 }
 
-//funkcja wczytujaca dane do ksiazki adresowej z pliku
-void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, string *hasloAdmin)
+//funkcja wczytujaca dane uzytkownikow  z pliku
+void wczytajDaneUzytkownikow(vector<Uzytkownik> &uzytkownicy)
 {
     fstream plikDoWczytania;
     string aktualnaLiniaTekstu;
     string slowo;
     int poleDanych=0;
-    Osoba wczytywanaOsoba;
+    Uzytkownik wczytywanyUzytkownik;
 
-    plikDoWczytania.open("ksazkaAdresowa.txt",ios::in);
+    plikDoWczytania.open("uzytkownicy.txt",ios::in);
     if(plikDoWczytania.good()==true)
     {
-        getline(plikDoWczytania,aktualnaLiniaTekstu);
-        *hasloAdmin=szyfrujHaslo(aktualnaLiniaTekstu);
 
         while(getline(plikDoWczytania,aktualnaLiniaTekstu))
         {
@@ -87,26 +113,96 @@ void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, string *hasloAdmin)
                     switch(poleDanych)
                     {
                     case 0 :
-                        wczytywanaOsoba.id = stoi(slowo);
+                        wczytywanyUzytkownik.idUzytkownika = stoi(slowo);
                         break;
 
                     case 1 :
-                        wczytywanaOsoba.imie = slowo;
+                        wczytywanyUzytkownik.nazwa = slowo;
                         break;
 
                     case 2 :
-                        wczytywanaOsoba.nazwisko = slowo;
+                        wczytywanyUzytkownik.haslo = szyfrujHaslo(slowo);
+                        break;
+
+                    }
+
+
+                    poleDanych++;
+
+                    slowo.clear();
+                    break;
+
+                default:
+                    slowo += aktualnaLiniaTekstu[i];
+                    break;
+                }
+
+            }
+            uzytkownicy.push_back(wczytywanyUzytkownik);
+            poleDanych=0;
+        }
+
+
+        plikDoWczytania.close();
+        return;
+    }
+    else
+    {
+       return;
+    }
+}
+//funkcja wczytujaca dane do ksiazki adresowej z pliku
+void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, int idZalogowanegoUzytkownika)
+{
+    fstream plikDoWczytania;
+    string aktualnaLiniaTekstu;
+    string slowo;
+    int poleDanych=0;
+    Osoba wczytywanaOsoba;
+
+    plikDoWczytania.open("ksazkaAdresowa.txt",ios::in);
+    if(plikDoWczytania.good()==true)
+    {
+
+
+        while(getline(plikDoWczytania,aktualnaLiniaTekstu))
+        {
+
+
+            for(int i = 0; i<aktualnaLiniaTekstu.length(); i++)
+            {
+                switch(aktualnaLiniaTekstu[i])
+                {
+
+                case '|' :
+
+                    switch(poleDanych)
+                    {
+                    case 0 :
+                        wczytywanaOsoba.idOsoby = stoi(slowo);
+                        break;
+
+                    case 1 :
+                        wczytywanaOsoba.idUzytkownika = stoi(slowo);
+                        break;
+
+                    case 2 :
+                        wczytywanaOsoba.imie  = slowo;
                         break;
 
                     case 3 :
-                        wczytywanaOsoba.telefon = slowo;
+                        wczytywanaOsoba.nazwisko = slowo;
                         break;
 
                     case 4 :
-                        wczytywanaOsoba.email = slowo;
+                        wczytywanaOsoba.telefon = slowo;
                         break;
 
                     case 5 :
+                        wczytywanaOsoba.email = slowo;
+                        break;
+
+                    case 6 :
                         wczytywanaOsoba.adres = slowo;
                         break;
                     }
@@ -123,8 +219,16 @@ void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, string *hasloAdmin)
                 }
 
             }
-            ksiazkaAdresowa.push_back(wczytywanaOsoba);
-            poleDanych=0;
+            if(wczytywanaOsoba.idUzytkownika == idZalogowanegoUzytkownika)
+            {
+                ksiazkaAdresowa.push_back(wczytywanaOsoba);
+                poleDanych=0;
+            }
+            else
+            {
+                poleDanych=0;
+            }
+
         }
 
 
@@ -148,8 +252,8 @@ int  znajdzAktualneId (vector<Osoba> ksiazkaAdresowa)
     vector<Osoba>::iterator najwyzszeId;
     if (ksiazkaAdresowa.size()>0)
     {
-        najwyzszeId= max_element(ksiazkaAdresowa.begin(), ksiazkaAdresowa.end(),[](const Osoba& lhs, const Osoba& rhs){return lhs.id < rhs.id;});
-        aktualneId = (*najwyzszeId).id;
+        najwyzszeId= max_element(ksiazkaAdresowa.begin(), ksiazkaAdresowa.end(),[](const Osoba& lhs, const Osoba& rhs){return lhs.idOsoby < rhs.idOsoby;});
+        aktualneId = (*najwyzszeId).idOsoby;
     }
     else
     {
@@ -158,49 +262,125 @@ int  znajdzAktualneId (vector<Osoba> ksiazkaAdresowa)
     return aktualneId;
 }
 
+//funkcja wyznaczajaca najwysze id w ksiazce adresowej
+int  znajdzAktualneIdUzytkownika (vector<Uzytkownik> uzytkownicy)
+{
+    int aktualneIdUzytkownika;
+    vector<Uzytkownik>::iterator najwyzszeId;
+    if (uzytkownicy.size()>0)
+    {
+        najwyzszeId= max_element(uzytkownicy.begin(), uzytkownicy.end(),[](const Uzytkownik& lhs, const Uzytkownik& rhs){return lhs.idUzytkownika < rhs.idUzytkownika;});
+        aktualneIdUzytkownika = (*najwyzszeId).idUzytkownika;
+    }
+    else
+    {
+        aktualneIdUzytkownika=0;
+    }
+    return aktualneIdUzytkownika;
+}
 
 
-
-//funkcja logowania na konto admistratora
-bool zalogujJakoAdmin(string hasloAdmin)
+//funkcja logowania na konto uzytkownika
+int zalogujUzytkownika(vector<Uzytkownik> uzytkownicy)
 {
     string podaneHaslo;
+    string nazwaUzytkownika;
     int proby=0;
     cout<<endl;
-    cout<<"Podaj haslo administratora:";
-    while(cin>>podaneHaslo)
+    cout<<"Podaj nazwe uzytkownika:";
+    cin>>nazwaUzytkownika;
+    vector<Uzytkownik>::iterator uzytkownik;
+    uzytkownik = find_if(uzytkownicy.begin(), uzytkownicy.end(), [nazwaUzytkownika]( const Uzytkownik &aktualnyUzytkownik){return aktualnyUzytkownik.nazwa==nazwaUzytkownika;});
+    if (uzytkownik != uzytkownicy.end())
     {
-        if(podaneHaslo==hasloAdmin)
+        cout<<endl;
+        cout<<"Podaj haslo:";
+        while(cin>>podaneHaslo)
         {
-            cout<<endl;
-            cout<<"Zalogowano na konto administratora.";
-            Sleep(2000);
-            return true;
-        }
-        else
-        {
-            cout<<"Haslo nieprawidlowe. Podaj ponownie haslo administratora:";
-            proby++;
-            if (proby>=3)
+            if(podaneHaslo==(*uzytkownik).haslo)
             {
-                return false;
+                cout<<endl;
+                cout<<"Zalogowano na konto uzytkownika.";
+                Sleep(2000);
+                return (*uzytkownik).idUzytkownika;
+            }
+            else
+            {
+                cout<<endl;
+                cout<<"Haslo nieprawidlowe. Podaj ponownie haslo.";
+                cout<<endl;
+                proby++;
+                if (proby>=3)
+                {
+                    return 0;
+                }
             }
         }
+
+    }
+    else
+    {
+        cout<<endl;
+        cout<<"Brak podanej nazwy uzytkownika w ksiazce adresowej.";
+        Sleep(2000);
+        return 0;
     }
 
 }
 
-//funkcja wylogowania z konta administratora
-bool wylogujZAdmina()
+//funkcja wylogowania z konta uzytkownika
+int wylogujUzytkownika()
 {
     cout<<endl;
-    cout<<"Wylogowano z konta administratora.";
+    cout<<"Wylogowano z konta uzytkownika.";
     Sleep(2000);
-    return false;
+    return 0;
 }
 
+
+//funkcja rejestracji uzytkownika
+int zarejestrujUzytkownika(vector<Uzytkownik> &uzytkownicy, int aktualneId)
+{
+    Uzytkownik uzytkownikDoDodania;
+    cout<<endl;
+    cout<<"Podaj nazwe:"<<endl;
+    cin>>uzytkownikDoDodania.nazwa;
+    cout<<"Podaj haslo:"<<endl;
+    cin>>uzytkownikDoDodania.haslo;
+
+    int i =0;
+    while (i<uzytkownicy.size())
+    {
+
+        if (uzytkownikDoDodania.nazwa==uzytkownicy[i].nazwa)
+        {
+            cout<<endl;
+            cout << "Taki uzytkownik jest juz zarejestrowany. Podaj ponownie nazwe."<<endl;
+            cout<<endl;
+            cin>>uzytkownikDoDodania.nazwa;
+            i=0;
+        }
+        else
+        {
+            i++;
+        }
+    }
+
+    aktualneId+=1;
+    uzytkownikDoDodania.idUzytkownika = aktualneId;
+
+    uzytkownicy.push_back(uzytkownikDoDodania);
+
+    cout<<endl;
+    cout<<"Uzytkownik zostal pomyslnie dodany do ksiazki adresowej.";
+    Sleep(3000);
+    return aktualneId;
+
+}
+
+
 //funkcja dodawania nowej osoby do ksiazki adresowej
-int dodajOsobe(vector<Osoba> &ksiazkaAdresowa, int aktualneId)
+int dodajOsobe(vector<Osoba> &ksiazkaAdresowa, int aktualneId, int idZalogowanegoUzytkownika )
 {
     Osoba osobaDoDodania;
     cout<<endl;
@@ -237,7 +417,8 @@ int dodajOsobe(vector<Osoba> &ksiazkaAdresowa, int aktualneId)
     cin.sync();
     getline(cin,osobaDoDodania.adres);
     aktualneId+=1;
-    osobaDoDodania.id = aktualneId;
+    osobaDoDodania.idOsoby = aktualneId;
+    osobaDoDodania.idUzytkownika = idZalogowanegoUzytkownika;
 
     ksiazkaAdresowa.push_back(osobaDoDodania);
 
@@ -259,7 +440,7 @@ void edytujOsobe(vector<Osoba> &ksiazkaAdresowa)
     cin>>id;
     cout<<endl;
     vector<Osoba>::iterator osobaDoEdycji;
-    osobaDoEdycji = find_if(ksiazkaAdresowa.begin(), ksiazkaAdresowa.end(), [id]( const Osoba &aktualnaOsoba){return aktualnaOsoba.id==id;});
+    osobaDoEdycji = find_if(ksiazkaAdresowa.begin(), ksiazkaAdresowa.end(), [id]( const Osoba &aktualnaOsoba){return aktualnaOsoba.idOsoby==id;});
     if (osobaDoEdycji != ksiazkaAdresowa.end())
     {
 
@@ -333,7 +514,7 @@ void edytujOsobe(vector<Osoba> &ksiazkaAdresowa)
 //fukcja wyswietlania danych osoby z ksiazki adresowej
 void wyswietlOsobe(vector<Osoba>::iterator osobaDoWyswietlenia )
 {
-    cout<<(*osobaDoWyswietlenia).id<<"|";
+    cout<<(*osobaDoWyswietlenia).idOsoby<<"|";
     cout<<(*osobaDoWyswietlenia).imie<<" ";
     cout<<(*osobaDoWyswietlenia).nazwisko<<"|";
     cout<<(*osobaDoWyswietlenia).telefon<<"|";
@@ -351,7 +532,7 @@ void usunOsobe(vector<Osoba> &ksiazkaAdresowa)
     cin>>id;
 
     vector<Osoba>::iterator osobaDoUsuniecia;
-    osobaDoUsuniecia = find_if(ksiazkaAdresowa.begin(), ksiazkaAdresowa.end(), [id]( const Osoba &aktualnaOsoba){return aktualnaOsoba.id==id;});
+    osobaDoUsuniecia = find_if(ksiazkaAdresowa.begin(), ksiazkaAdresowa.end(), [id]( const Osoba &aktualnaOsoba){return aktualnaOsoba.idOsoby==id;});
     if (osobaDoUsuniecia != ksiazkaAdresowa.end())
     {
         cout<<endl;
@@ -503,7 +684,7 @@ void wyszukajNazwisko(vector<Osoba> ksiazkaAdresowa)
 }
 
 //funkcja zmieniajaca haslo administratora
-string zmienHasloAdmina()
+void zmienHasloUzytkownika(vector <Uzytkownik> &uzytkownicy, int idZalogowanegoUzytkownika)
 {
     string haslo1;
     string haslo2;
@@ -512,17 +693,25 @@ string zmienHasloAdmina()
     while(true)
     {
         cout<<endl;
-        cout<<"Podaj nowe haslo administratora:"<<endl;
+        cout<<"Podaj nowe haslo uzytkownika:"<<endl;
         cin>>haslo1;
-        cout<<"Powtorz nowe haslo administratora:"<<endl;
+        cout<<"Powtorz nowe haslo uzytkownika:"<<endl;
         cin>>haslo2;
 
         if (haslo1==haslo2)
         {
             cout<<endl;
-            cout<<"Haslo administratora zostalo zmienione."<<endl;
-            Sleep(3000);
-            return haslo1;
+            vector<Uzytkownik>::iterator uzytkownik;
+            uzytkownik = find_if(uzytkownicy.begin(), uzytkownicy.end(), [idZalogowanegoUzytkownika]( const Uzytkownik &aktualnyUzytkownik){return aktualnyUzytkownik.idUzytkownika==idZalogowanegoUzytkownika;});
+             if (uzytkownik != uzytkownicy.end())
+             {
+                 (*uzytkownik).haslo = haslo1;
+                 cout<<"Haslo uzytkownika zostalo zmienione."<<endl;
+                 Sleep(3000);
+                 return;
+             }
+
+
         }
         else
         {
@@ -536,32 +725,31 @@ string zmienHasloAdmina()
 
 int main()
 {
-    bool zalogowano=false;
+    int idZalogowanegoUzytkownika=0;
     bool zapisDanychUdany=false;
     char wyborUzytkownika;
     string hasloAdmin="admin";
     int aktualneId;
 
     vector<Osoba> ksiazkaAdresowa;
+    vector<Uzytkownik> uzytkownicy;
 
-//wczytanie danych z pliku tekstowego do struktury danych
+//wczytanie danychuzytkownikow z pliku tekstowego do struktury danych
 
-    wczytajDaneZPliku(ksiazkaAdresowa, &hasloAdmin);
-    aktualneId=znajdzAktualneId(ksiazkaAdresowa);
+    wczytajDaneUzytkownikow(uzytkownicy);
+
 
 //menu uzytkownika
 
     while(true)
     {
-        if(zalogowano==false)
+        if(idZalogowanegoUzytkownika==0)
         {
             system("cls");
-            cout<< "*****       Ksiazka adresowa V1.3        *****"<<endl;
+            cout<< "*****       Ksiazka adresowa V1.4        *****"<<endl;
             cout<< "**********************************************"<<endl;
-            cout<< "* 1. Wyszukiwanie osoby po imieniu.          *"<<endl;
-            cout<< "* 2. Wyszukiwanie osoby po nazwisku.         *"<<endl;
-            cout<< "* 3. Wypisanie wszystkich pozycji z ksiazki. *"<<endl;
-            cout<< "* 4. Logowanie na konto administratora.      *"<<endl;
+            cout<< "* 1. Logowanie.                              *"<<endl;
+            cout<< "* 2. Rejestracja.                            *"<<endl;
             cout<< "* 9. Wyjscie z programu.                     *"<<endl;
             cout<< "**********************************************"<<endl;
             cout<<endl;
@@ -572,23 +760,19 @@ int main()
             switch (wyborUzytkownika)
             {
             case '1':
-                wyszukajImie(ksiazkaAdresowa);
+                idZalogowanegoUzytkownika=zalogujUzytkownika(uzytkownicy);
+                wczytajDaneZPliku(ksiazkaAdresowa, idZalogowanegoUzytkownika);
+                aktualneId=znajdzAktualneId(ksiazkaAdresowa);
                 break;
 
             case '2':
-                wyszukajNazwisko(ksiazkaAdresowa);
-                break;
-
-            case '3':
-                wypiszWszystkieOsoby(ksiazkaAdresowa);
-                break;
-
-            case '4':
-                zalogowano=zalogujJakoAdmin(hasloAdmin);
+                aktualneId=znajdzAktualneIdUzytkownika(uzytkownicy);
+                aktualneId=zarejestrujUzytkownika(uzytkownicy,aktualneId);
+                zapiszDaneUzytkownikow(uzytkownicy);
                 break;
 
             case '9':
-                zapisDanychUdany=zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin);
+                zapisDanychUdany=zapiszDaneUzytkownikow(uzytkownicy);
                 if (zapisDanychUdany==true)
                 {
                     cout<<"Dane zostaly pomyslnie zapisane"<<endl;
@@ -600,8 +784,12 @@ int main()
         }
         else
         {
+
+
+
+
             system("cls");
-            cout<< "*****       Ksiazka adresowa V1.3        *****"<<endl;
+            cout<< "*****       Ksiazka adresowa V1.4        *****"<<endl;
             cout<< "**********************************************"<<endl;
             cout<< "* 1. Wyszukiwanie osoby po imieniu.          *"<<endl;
             cout<< "* 2. Wyszukiwanie osoby po nazwisku.         *"<<endl;
@@ -610,7 +798,7 @@ int main()
             cout<< "* 5. Edycja osoby.                           *"<<endl;
             cout<< "* 6. Usuniecie osoby.                        *"<<endl;
             cout<< "* 7. Zmiana hasla.                           *"<<endl;
-            cout<< "* 8. Wylogowanie z konta administratora.     *"<<endl;
+            cout<< "* 8. Wylogowanie z konta uzytkownika.        *"<<endl;
             cout<< "* 9. Wyjscie z programu.                     *"<<endl;
             cout<< "**********************************************"<<endl;
             cout<<endl;
@@ -634,7 +822,7 @@ int main()
 
             case '4':
 
-                aktualneId=dodajOsobe(ksiazkaAdresowa, aktualneId);
+                aktualneId=dodajOsobe(ksiazkaAdresowa, aktualneId, idZalogowanegoUzytkownika);
                 zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin);
                 break;
 
@@ -650,11 +838,12 @@ int main()
                 break;
 
             case '7':
-                hasloAdmin=zmienHasloAdmina();
+                zmienHasloUzytkownika(uzytkownicy, idZalogowanegoUzytkownika);
+                zapiszDaneUzytkownikow(uzytkownicy);
                 break;
 
             case '8':
-                zalogowano=wylogujZAdmina();
+                idZalogowanegoUzytkownika=wylogujUzytkownika();
                 break;
 
             case '9':
