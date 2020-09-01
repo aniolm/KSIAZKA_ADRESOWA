@@ -933,6 +933,7 @@ int main()
 
             case '8':
                 idZalogowanegoUzytkownika=wylogujUzytkownika();
+                ksiazkaAdresowa.clear();
                 break;
 
             case '9':
