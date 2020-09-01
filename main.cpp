@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cstdio>
 
 
 using namespace std;
@@ -62,27 +63,115 @@ bool zapiszDaneUzytkownikow(vector<Uzytkownik> uzytkownicy)
 }
 
 //funkcja zapisujaca dane z ksiazki adresowej do pliku
-bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin)
+bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin, int idZalogowanegoUzytkownika)
 {
-    fstream plikDoZapisu;
-    plikDoZapisu.open("ksazkaAdresowa.txt",ios::out);
-    plikDoZapisu<<szyfrujHaslo(hasloAdmin)<<endl;
+    fstream plikKsiazkaAdresowa;
+    fstream plikTymczasowy;
+    string aktualnaLiniaTekstu;
+    string slowo;
+    int poleDanych;
+    Osoba wczytywanaOsoba;
+
+    plikKsiazkaAdresowa.open("ksiazkaAdresowa.txt",ios::in);
+    plikTymczasowy.open("ksiazkaAdresowa_tmp.txt",ios::out);
 
     vector<Osoba>::iterator osobaDoZapisu;
     vector<Osoba>::iterator koniecKsiazki = ksiazkaAdresowa.end() ;
     for (osobaDoZapisu=ksiazkaAdresowa.begin(); osobaDoZapisu!=koniecKsiazki; osobaDoZapisu++ )
     {
 
-        plikDoZapisu<<(*osobaDoZapisu).idOsoby<<"|";
-        plikDoZapisu<<(*osobaDoZapisu).imie<<"|";
-        plikDoZapisu<<(*osobaDoZapisu).nazwisko<<"|";
-        plikDoZapisu<<(*osobaDoZapisu).telefon<<"|";
-        plikDoZapisu<<(*osobaDoZapisu).email<<"|";
-        plikDoZapisu<<(*osobaDoZapisu).adres<<"|"<<endl;
-
+        plikTymczasowy<<(*osobaDoZapisu).idOsoby<<"|";
+        plikTymczasowy<< idZalogowanegoUzytkownika << "|";
+        plikTymczasowy<<(*osobaDoZapisu).imie<<"|";
+        plikTymczasowy<<(*osobaDoZapisu).nazwisko<<"|";
+        plikTymczasowy<<(*osobaDoZapisu).telefon<<"|";
+        plikTymczasowy<<(*osobaDoZapisu).email<<"|";
+        plikTymczasowy<<(*osobaDoZapisu).adres<<"|"<<endl;
 
     }
-    plikDoZapisu.close();
+
+    if(plikKsiazkaAdresowa.good()==true)
+    {
+
+
+        while(getline(plikKsiazkaAdresowa,aktualnaLiniaTekstu))
+        {
+
+
+            for(int i = 0; i<aktualnaLiniaTekstu.length(); i++)
+            {
+                switch(aktualnaLiniaTekstu[i])
+                {
+
+                case '|' :
+
+                    switch(poleDanych)
+                    {
+                    case 0 :
+                        wczytywanaOsoba.idOsoby = stoi(slowo);
+                        break;
+
+                    case 1 :
+                        wczytywanaOsoba.idUzytkownika = stoi(slowo);
+                        break;
+
+                    case 2 :
+                        wczytywanaOsoba.imie  = slowo;
+                        break;
+
+                    case 3 :
+                        wczytywanaOsoba.nazwisko = slowo;
+                        break;
+
+                    case 4 :
+                        wczytywanaOsoba.telefon = slowo;
+                        break;
+
+                    case 5 :
+                        wczytywanaOsoba.email = slowo;
+                        break;
+
+                    case 6 :
+                        wczytywanaOsoba.adres = slowo;
+                        break;
+                    }
+
+
+                    poleDanych++;
+
+                    slowo.clear();
+                    break;
+
+                default:
+                    slowo += aktualnaLiniaTekstu[i];
+                    break;
+                }
+
+            }
+            if(wczytywanaOsoba.idUzytkownika != idZalogowanegoUzytkownika)
+            {
+                plikTymczasowy<<wczytywanaOsoba.idOsoby<<"|";
+                plikTymczasowy<< wczytywanaOsoba.idUzytkownika << "|";
+                plikTymczasowy<<wczytywanaOsoba.imie<<"|";
+                plikTymczasowy<<wczytywanaOsoba.nazwisko<<"|";
+                plikTymczasowy<<wczytywanaOsoba.telefon<<"|";
+                plikTymczasowy<<wczytywanaOsoba.email<<"|";
+                plikTymczasowy<<wczytywanaOsoba.adres<<"|"<<endl;
+                poleDanych=0;
+            }
+            else
+            {
+                poleDanych=0;
+            }
+
+        }
+
+    }
+
+    plikTymczasowy.close();
+    plikKsiazkaAdresowa.close();
+    remove( "ksiazkaAdresowa.txt" );
+    rename("ksiazkaAdresowa_tmp.txt", "ksiazkaAdresowa.txt");
     return true;
 }
 
@@ -160,7 +249,7 @@ void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, int idZalogowanegoUzytkow
     int poleDanych=0;
     Osoba wczytywanaOsoba;
 
-    plikDoWczytania.open("ksazkaAdresowa.txt",ios::in);
+    plikDoWczytania.open("ksiazkaAdresowa.txt",ios::in);
     if(plikDoWczytania.good()==true)
     {
 
@@ -823,18 +912,18 @@ int main()
             case '4':
 
                 aktualneId=dodajOsobe(ksiazkaAdresowa, aktualneId, idZalogowanegoUzytkownika);
-                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin);
+                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
                 break;
 
             case '5':
                 edytujOsobe(ksiazkaAdresowa);
-                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin);
+                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
                 break;
 
             case '6':
                 usunOsobe(ksiazkaAdresowa);
                 aktualneId=znajdzAktualneId(ksiazkaAdresowa);
-                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin);
+                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
                 break;
 
             case '7':
@@ -847,7 +936,7 @@ int main()
                 break;
 
             case '9':
-                zapisDanychUdany=zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin);
+                zapisDanychUdany=zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
                 if (zapisDanychUdany==true)
                 {
                     cout<<"Dane zostaly pomyslnie zapisane"<<endl;
