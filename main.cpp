@@ -63,13 +63,14 @@ bool zapiszDaneUzytkownikow(vector<Uzytkownik> uzytkownicy)
 }
 
 //funkcja zapisujaca dane z ksiazki adresowej do pliku
-bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin, int idZalogowanegoUzytkownika)
+int zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin, int idZalogowanegoUzytkownika)
 {
     fstream plikKsiazkaAdresowa;
     fstream plikTymczasowy;
     string aktualnaLiniaTekstu;
     string slowo;
     int poleDanych;
+    int aktualneId=0;
     Osoba wczytywanaOsoba;
 
     plikKsiazkaAdresowa.open("ksiazkaAdresowa.txt",ios::in);
@@ -87,7 +88,10 @@ bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin, int idZ
         plikTymczasowy<<(*osobaDoZapisu).telefon<<"|";
         plikTymczasowy<<(*osobaDoZapisu).email<<"|";
         plikTymczasowy<<(*osobaDoZapisu).adres<<"|"<<endl;
-
+        if ((*osobaDoZapisu).idOsoby > aktualneId)
+        {
+            aktualneId=(*osobaDoZapisu).idOsoby;
+        }
     }
 
     if(plikKsiazkaAdresowa.good()==true)
@@ -148,6 +152,7 @@ bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin, int idZ
                 }
 
             }
+
             if(wczytywanaOsoba.idUzytkownika != idZalogowanegoUzytkownika)
             {
                 plikTymczasowy<<wczytywanaOsoba.idOsoby<<"|";
@@ -158,6 +163,11 @@ bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin, int idZ
                 plikTymczasowy<<wczytywanaOsoba.email<<"|";
                 plikTymczasowy<<wczytywanaOsoba.adres<<"|"<<endl;
                 poleDanych=0;
+
+                if (wczytywanaOsoba.idOsoby > aktualneId)
+                {
+                aktualneId=wczytywanaOsoba.idOsoby;
+                }
             }
             else
             {
@@ -172,7 +182,7 @@ bool zapiszDaneDoPliku(vector<Osoba> ksiazkaAdresowa, string hasloAdmin, int idZ
     plikKsiazkaAdresowa.close();
     remove( "ksiazkaAdresowa.txt" );
     rename("ksiazkaAdresowa_tmp.txt", "ksiazkaAdresowa.txt");
-    return true;
+    return aktualneId;
 }
 
 //funkcja wczytujaca dane uzytkownikow  z pliku
@@ -241,12 +251,13 @@ void wczytajDaneUzytkownikow(vector<Uzytkownik> &uzytkownicy)
     }
 }
 //funkcja wczytujaca dane do ksiazki adresowej z pliku
-void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, int idZalogowanegoUzytkownika)
+int wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, int idZalogowanegoUzytkownika)
 {
     fstream plikDoWczytania;
     string aktualnaLiniaTekstu;
     string slowo;
     int poleDanych=0;
+    int aktualneId=0;
     Osoba wczytywanaOsoba;
 
     plikDoWczytania.open("ksiazkaAdresowa.txt",ios::in);
@@ -308,6 +319,11 @@ void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, int idZalogowanegoUzytkow
                 }
 
             }
+            if (wczytywanaOsoba.idOsoby > aktualneId)
+            {
+                aktualneId=wczytywanaOsoba.idOsoby;
+            }
+
             if(wczytywanaOsoba.idUzytkownika == idZalogowanegoUzytkownika)
             {
                 ksiazkaAdresowa.push_back(wczytywanaOsoba);
@@ -322,11 +338,11 @@ void wczytajDaneZPliku(vector<Osoba> &ksiazkaAdresowa, int idZalogowanegoUzytkow
 
 
         plikDoWczytania.close();
-        return;
+        return aktualneId;
     }
     else
     {
-       return;
+       return 0;
     }
 
 
@@ -815,10 +831,10 @@ void zmienHasloUzytkownika(vector <Uzytkownik> &uzytkownicy, int idZalogowanegoU
 int main()
 {
     int idZalogowanegoUzytkownika=0;
-    bool zapisDanychUdany=false;
     char wyborUzytkownika;
     string hasloAdmin="admin";
-    int aktualneId;
+    int aktualneIdUzytkownika;
+    int aktualneIdOsoby;
 
     vector<Osoba> ksiazkaAdresowa;
     vector<Uzytkownik> uzytkownicy;
@@ -850,22 +866,18 @@ int main()
             {
             case '1':
                 idZalogowanegoUzytkownika=zalogujUzytkownika(uzytkownicy);
-                wczytajDaneZPliku(ksiazkaAdresowa, idZalogowanegoUzytkownika);
-                aktualneId=znajdzAktualneId(ksiazkaAdresowa);
+                aktualneIdOsoby=wczytajDaneZPliku(ksiazkaAdresowa, idZalogowanegoUzytkownika);
                 break;
 
             case '2':
-                aktualneId=znajdzAktualneIdUzytkownika(uzytkownicy);
-                aktualneId=zarejestrujUzytkownika(uzytkownicy,aktualneId);
+                aktualneIdUzytkownika=znajdzAktualneIdUzytkownika(uzytkownicy);
+                aktualneIdUzytkownika=zarejestrujUzytkownika(uzytkownicy,aktualneIdUzytkownika);
                 zapiszDaneUzytkownikow(uzytkownicy);
                 break;
 
             case '9':
-                zapisDanychUdany=zapiszDaneUzytkownikow(uzytkownicy);
-                if (zapisDanychUdany==true)
-                {
-                    cout<<"Dane zostaly pomyslnie zapisane"<<endl;
-                }
+                zapiszDaneUzytkownikow(uzytkownicy);
+
                 exit(0);
             default:
                 break;
@@ -911,8 +923,8 @@ int main()
 
             case '4':
 
-                aktualneId=dodajOsobe(ksiazkaAdresowa, aktualneId, idZalogowanegoUzytkownika);
-                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
+                dodajOsobe(ksiazkaAdresowa, aktualneIdOsoby, idZalogowanegoUzytkownika);
+                aktualneIdOsoby=zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
                 break;
 
             case '5':
@@ -922,8 +934,7 @@ int main()
 
             case '6':
                 usunOsobe(ksiazkaAdresowa);
-                aktualneId=znajdzAktualneId(ksiazkaAdresowa);
-                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
+                aktualneIdOsoby=zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
                 break;
 
             case '7':
@@ -937,11 +948,7 @@ int main()
                 break;
 
             case '9':
-                zapisDanychUdany=zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
-                if (zapisDanychUdany==true)
-                {
-                    cout<<"Dane zostaly pomyslnie zapisane"<<endl;
-                }
+                zapiszDaneDoPliku(ksiazkaAdresowa, hasloAdmin, idZalogowanegoUzytkownika);
 
                 exit(0);
             default:
