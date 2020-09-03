@@ -591,7 +591,7 @@ void edytujOsobe(vector<Osoba> &ksiazkaAdresowa)
         }
         zapiszDaneEdytowanejOsoby(*osobaDoEdycji,false);
         cout<<endl;
-        cout<<"Dane zmienione poprawnie"<<endl;
+        cout<<"Dane osoby zostaly poprawnie zmienione."<<endl;
         Sleep(3000);
         return;
     }
@@ -622,6 +622,7 @@ int usunOsobe(vector<Osoba> &ksiazkaAdresowa, int aktualneId)
     int id;
     int aktualneIdOsoby=0;
     char wyborUzytkownika;
+    Osoba usuwanaOsoba;
     cout<<endl;
     cout<<"Podaj id osoby do usuniecia:"<<endl;
     cin>>id;
@@ -640,9 +641,12 @@ int usunOsobe(vector<Osoba> &ksiazkaAdresowa, int aktualneId)
         if(wyborUzytkownika=='t')
         {
 
-            ksiazkaAdresowa.erase(osobaDoUsuniecia);
 
-            aktualneIdOsoby=zapiszDaneEdytowanejOsoby(*osobaDoUsuniecia,true);
+            usuwanaOsoba=*osobaDoUsuniecia;
+            ksiazkaAdresowa.erase(osobaDoUsuniecia);
+            aktualneIdOsoby=zapiszDaneEdytowanejOsoby(usuwanaOsoba,true);
+
+
             cout<<endl;
             cout<<"Osoba zostala pomyslnie usunieta z ksiazki adresowej.";
             Sleep(3000);
@@ -846,7 +850,7 @@ int main()
         if(idZalogowanegoUzytkownika==0)
         {
             system("cls");
-            cout<< "*****       Ksiazka adresowa V1.4        *****"<<endl;
+            cout<< "*****       Ksiazka adresowa V1.5        *****"<<endl;
             cout<< "**********************************************"<<endl;
             cout<< "* 1. Logowanie.                              *"<<endl;
             cout<< "* 2. Rejestracja.                            *"<<endl;
@@ -885,7 +889,7 @@ int main()
 
 
             system("cls");
-            cout<< "*****       Ksiazka adresowa V1.4        *****"<<endl;
+            cout<< "*****       Ksiazka adresowa V1.5        *****"<<endl;
             cout<< "**********************************************"<<endl;
             cout<< "* 1. Wyszukiwanie osoby po imieniu.          *"<<endl;
             cout<< "* 2. Wyszukiwanie osoby po nazwisku.         *"<<endl;
