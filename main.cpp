@@ -28,18 +28,7 @@ struct Uzytkownik
     string haslo;
 };
 
-//funkcja szyfrujaca i deszfrujaca haslo administratora przed zapisaniem do pliku
-string szyfrujHaslo(string hasloDoZaszyfrowania)
-{
-    char kluczSzyfrowania = 'K'; //klucz szyfrowania, mo¿e byæ jakikolwiek znak
-    string hasloZaszyfrowane = hasloDoZaszyfrowania;
 
-    for (int i = 0; i < hasloDoZaszyfrowania.size(); i++)
-    {
-        hasloZaszyfrowane[i] = hasloDoZaszyfrowania[i] ^ kluczSzyfrowania;
-    }
-    return hasloZaszyfrowane;
-}
 
 //funkcja zapisujaca dane uzytkownikow do pliku
 bool zapiszDaneUzytkownikow(vector<Uzytkownik> uzytkownicy)
@@ -54,7 +43,7 @@ bool zapiszDaneUzytkownikow(vector<Uzytkownik> uzytkownicy)
 
         plikDoZapisu<<(*uzytkownikDoZapisu).idUzytkownika<<"|";
         plikDoZapisu<<(*uzytkownikDoZapisu).nazwa<<"|";
-        plikDoZapisu<<szyfrujHaslo((*uzytkownikDoZapisu).haslo)<<"|"<<endl;
+        plikDoZapisu<<(*uzytkownikDoZapisu).haslo<<"|"<<endl;
 
 
     }
@@ -220,7 +209,7 @@ void wczytajDaneUzytkownikow(vector<Uzytkownik> &uzytkownicy)
                         break;
 
                     case 2 :
-                        wczytywanyUzytkownik.haslo = szyfrujHaslo(slowo);
+                        wczytywanyUzytkownik.haslo = slowo;
                         break;
 
                     }
@@ -448,7 +437,7 @@ int zarejestrujUzytkownika(vector<Uzytkownik> &uzytkownicy, int aktualneId)
 {
     Uzytkownik uzytkownikDoDodania;
     cout<<endl;
-    cout<<"Podaj nazwe:"<<endl;
+    cout<<"Podaj nazwe uzytkownika:"<<endl;
     cin>>uzytkownikDoDodania.nazwa;
     cout<<"Podaj haslo:"<<endl;
     cin>>uzytkownikDoDodania.haslo;
@@ -541,7 +530,7 @@ void edytujOsobe(vector<Osoba> &ksiazkaAdresowa)
     char wyborUzytkownika;
     string poleDoEdycji;
     cout<<endl;
-    cout<<"Podaj id osoby do edycji:";
+    cout<<"Podaj id osoby do edycji:"<<endl;
     cin>>id;
     cout<<endl;
     vector<Osoba>::iterator osobaDoEdycji;
@@ -554,8 +543,9 @@ void edytujOsobe(vector<Osoba> &ksiazkaAdresowa)
         cout<<"3. Telefon."<<endl;
         cout<<"5. E-mail."<<endl;
         cout<<"5. Adres."<<endl;
-        cout<<"Wybierz pole do edycji:"<<endl;
         cout<<endl;
+        cout<<"Wybierz pole do edycji:"<<endl;
+
         cin>>wyborUzytkownika;
         switch (wyborUzytkownika)
         {
